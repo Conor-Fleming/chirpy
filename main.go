@@ -1,29 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
-
-type apiConfig struct {
-	fileServes int
-}
-
-func (cfg *apiConfig) middlewareMetrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileServes++
-	})
-}
 
 func main() {
 	apiCfg := apiConfig{}
-	mux := http.NewServeMux()
-	mux.Handle("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
-	mux.HandleFunc("/healthz", healthzHandler)
-	mux.HandleFunc("/metrics", apiCfg.hitzHandler)
-	corsMux := corsMiddleware(mux)
+	router := chi.NewRouter()
+	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
+	router.Get("/healthz", healthzHandler)
+	router.Get("/metrics", apiCfg.hitzHandler)
+	corsMux := corsMiddleware(router)
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -41,17 +31,10 @@ func corsMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		if r.Method != "GET" {
+			w.WriteHeader(405)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func healthzHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "OK")
-}
-
-func (cfg *apiConfig) hitzHandler(w http.ResponseWriter, r *http.Request) {
-	hitsString := fmt.Sprintf("Hits: %d", cfg.fileServes)
-	io.WriteString(w, hitsString)
 }
