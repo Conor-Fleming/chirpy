@@ -1,15 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 )
 
+type apiConfig struct {
+	fileServes int
+}
+
+func (cfg *apiConfig) middlewareMetrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.fileServes++
+	})
+}
+
 func main() {
+	apiCfg := apiConfig{}
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir(".")))
+	mux.Handle("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 	mux.HandleFunc("/healthz", healthzHandler)
+	mux.HandleFunc("/metrics", apiCfg.hitzHandler)
 	corsMux := corsMiddleware(mux)
 
 	server := &http.Server{
@@ -36,4 +49,9 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
+}
+
+func (cfg *apiConfig) hitzHandler(w http.ResponseWriter, r *http.Request) {
+	hitsString := fmt.Sprintf("Hits: %d", cfg.fileServes)
+	io.WriteString(w, hitsString)
 }
