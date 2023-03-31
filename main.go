@@ -13,10 +13,11 @@ func main() {
 	apiRouter := chi.NewRouter()
 	adminRouter := chi.NewRouter()
 	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
-	apiRouter.Mount("/api", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
-	adminRouter.Mount("/admin", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
+
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
+	router.Mount("/api", apiRouter)
+	router.Mount("/admin", adminRouter)
 	corsMux := corsMiddleware(router)
 
 	server := &http.Server{
