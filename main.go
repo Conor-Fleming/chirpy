@@ -12,14 +12,17 @@ func main() {
 	router := chi.NewRouter()
 	apiRouter := chi.NewRouter()
 	adminRouter := chi.NewRouter()
-	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
+
+	apiRouter.Post("/validate_chirp", validateHandler)
+
+	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 	router.Mount("/api", apiRouter)
 	router.Mount("/admin", adminRouter)
-	corsMux := corsMiddleware(router)
 
+	corsMux := corsMiddleware(router)
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: corsMux,
@@ -36,10 +39,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if r.Method != "GET" {
-			w.WriteHeader(405)
-			return
-		}
+
 		next.ServeHTTP(w, r)
 	})
 }
