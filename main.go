@@ -4,11 +4,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Conor-Fleming/chirpy/database"
 	"github.com/go-chi/chi"
 )
 
 func main() {
 	apiCfg := apiConfig{}
+	dbClient, err := database.NewDB("database.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 	router := chi.NewRouter()
 	apiRouter := chi.NewRouter()
 	adminRouter := chi.NewRouter()
@@ -16,7 +21,7 @@ func main() {
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
 
-	apiRouter.Post("/validate_chirp", validateHandler)
+	apiRouter.Post("/chirps", validateHandler)
 
 	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 	router.Mount("/api", apiRouter)

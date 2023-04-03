@@ -32,6 +32,7 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
+		ID   int    `json:"id"`
 		Body string `json:"body"`
 	}
 
