@@ -30,6 +30,21 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	return Chirp{}, errors.New("error occured when creating chirp")
 }
 
+func (db *DB) GetChirp(id int) (Chirp, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+	chirps, err := db.readDB()
+	if err != nil {
+		return Chirp{}, errors.New("error reading DB")
+	}
+
+	if body, ok := chirps.Chirps[id]; ok {
+		return body, nil
+	}
+
+	return Chirp{}, errors.New("The given ID doesnt exist")
+}
+
 func (db *DB) GetChirps() ([]Chirp, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()

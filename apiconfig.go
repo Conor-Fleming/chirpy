@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/Conor-Fleming/chirpy/database"
+	"github.com/go-chi/chi"
 )
 
 type apiConfig struct {
@@ -47,6 +49,18 @@ func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, result)
 }
 
+func (cfg *apiConfig) GetchirpByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "chirpID")
+	idInt, _ := strconv.Atoi(id)
+	result, err := cfg.dbClient.GetChirp(idInt)
+	if err != nil {
+		respondWithError(w, 404, err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, result)
+}
+
 func (cfg apiConfig) postChirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
@@ -73,6 +87,7 @@ func (cfg apiConfig) postChirpHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, err)
 		return
 	}
+
 	respondWithJSON(w, http.StatusOK, result)
 }
 

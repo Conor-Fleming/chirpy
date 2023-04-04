@@ -25,6 +25,7 @@ func main() {
 
 	apiRouter.Post("/chirps", apiCfg.postChirpHandler)
 	apiRouter.Get("/chirps", apiCfg.getChirpsHandler)
+	apiRouter.Get("/chirps/{chirpID}", apiCfg.GetchirpByID)
 
 	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 	router.Mount("/api", apiRouter)
