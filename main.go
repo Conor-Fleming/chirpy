@@ -9,10 +9,12 @@ import (
 )
 
 func main() {
-	apiCfg := apiConfig{}
 	dbClient, err := database.NewDB("database.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal()
+	}
+	apiCfg := apiConfig{
+		dbClient: *dbClient,
 	}
 	router := chi.NewRouter()
 	apiRouter := chi.NewRouter()
@@ -21,7 +23,8 @@ func main() {
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
 
-	apiRouter.Post("/chirps", validateHandler)
+	apiRouter.Post("/chirps", apiCfg.postChirpHandler)
+	apiRouter.Get("/chirps", apiCfg.getChirpsHandler)
 
 	router.Mount("/", apiCfg.middlewareMetrics(http.FileServer(http.Dir("."))))
 	router.Mount("/api", apiRouter)
