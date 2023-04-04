@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-var idCounter int = 0
-
 type DB struct {
 	path string
 	mux  *sync.RWMutex
@@ -26,6 +24,7 @@ type Chirp struct {
 func NewDB(filepath string) (*DB, error) {
 	db := DB{
 		path: filepath,
+		mux:  &sync.RWMutex{},
 	}
 
 	err := db.ensureDB()

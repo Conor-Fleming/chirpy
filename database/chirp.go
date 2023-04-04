@@ -5,8 +5,12 @@ import (
 	"sort"
 )
 
+var idCounter int = 0
+
 func (db *DB) CreateChirp(body string) (Chirp, error) {
 	//read DB to get map of "Chirps"
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	chirpData, _ := db.readDB()
 
 	//Create chirp obj with body and unique ID
@@ -27,12 +31,14 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 }
 
 func (db *DB) GetChirps() ([]Chirp, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	chirps, err := db.readDB()
 	if err != nil {
 		return nil, errors.New("error reading DB")
 	}
 
-	keys := make([]int, len(chirps.Chirps))
+	keys := make([]int, 0)
 	for k := range chirps.Chirps {
 		keys = append(keys, k)
 	}
