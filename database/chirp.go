@@ -1,6 +1,9 @@
 package database
 
-import "errors"
+import (
+	"errors"
+	"sort"
+)
 
 func (db *DB) CreateChirp(body string) (Chirp, error) {
 	//read DB to get map of "Chirps"
@@ -24,6 +27,23 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 }
 
 func (db *DB) GetChirps() ([]Chirp, error) {
-	//chir
-	return nil, nil
+	chirps, err := db.readDB()
+	if err != nil {
+		return nil, errors.New("error reading DB")
+	}
+
+	keys := make([]int, len(chirps.Chirps))
+	for k := range chirps.Chirps {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
+	chirpSlice := make([]Chirp, 0)
+	for _, v := range keys {
+		chirpSlice = append(chirpSlice, chirps.Chirps[v])
+	}
+
+	return chirpSlice, nil
 }

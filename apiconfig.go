@@ -38,7 +38,13 @@ func (cfg *apiConfig) hitzHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := cfg.dbClient.GetChirps()
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err)
+		return
+	}
 
+	respondWithJSON(w, http.StatusOK, result)
 }
 
 func (cfg apiConfig) postChirpHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,10 +68,12 @@ func (cfg apiConfig) postChirpHandler(w http.ResponseWriter, r *http.Request) {
 	chirp.Body = cleanChirp(chirp.Body)
 
 	//write chirp to DB and respond with ok
-	cfg.dbClient.CreateChirp(chirp.Body)
-	respondWithJSON(w, http.StatusOK, validBody{
-		Cleaned_Body: chirp.Body,
-	})
+	result, err := cfg.dbClient.CreateChirp(chirp.Body)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, result)
 }
 
 func cleanChirp(body string) string {
