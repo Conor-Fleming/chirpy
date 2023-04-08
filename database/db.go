@@ -14,11 +14,17 @@ type DB struct {
 
 type DBSchema struct {
 	Chirps map[int]Chirp `json:"Chirps"`
+	Users  map[int]User  `json:"Users"`
 }
 
 type Chirp struct {
 	ID   int    `json:"id"`
 	Body string `json:"body"`
+}
+
+type User struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
 }
 
 func NewDB(filepath string) (*DB, error) {
