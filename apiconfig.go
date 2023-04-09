@@ -2,20 +2,41 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/Conor-Fleming/chirpy/database"
-	"github.com/go-chi/chi"
 )
 
 type apiConfig struct {
 	fileServes int
 	dbClient   database.DB
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if payload != nil {
+		response, err := json.Marshal(payload)
+		if err != nil {
+			log.Println("error marshalling", err)
+			w.WriteHeader(500)
+			response, _ := json.Marshal(errorBody{
+				Error: "error marshalling",
+			})
+			w.Write(response)
+			return
+		}
+		w.WriteHeader(code)
+		w.Write(response)
+	}
+}
+
+func respondWithError(w http.ResponseWriter, code int, err error) {
+	respondWithJSON(w, code, errorBody{
+		Error: err.Error(),
+	})
 }
 
 func (cfg *apiConfig) middlewareMetrics(next http.Handler) http.Handler {
@@ -39,64 +60,8 @@ func (cfg *apiConfig) hitzHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, hitsString)
 }
 
-func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := cfg.dbClient.GetChirps()
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, result)
-}
-
-func (cfg *apiConfig) GetchirpByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "chirpID")
-	idInt, _ := strconv.Atoi(id)
-	result, err := cfg.dbClient.GetChirp(idInt)
-	if err != nil {
-		respondWithError(w, 404, err)
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, result)
-}
-
-func (cfg apiConfig) postChirpHandler(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Body string `json:"body"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	chirp := parameters{}
-	err := decoder.Decode(&chirp)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, errors.New("something went wrong"))
-		return
-	}
-	//ensure chirp is under limit of 140 chars
-	if len(chirp.Body) > 140 {
-		respondWithError(w, 400, errors.New("Chirp is too long"))
-		return
-	}
-
-	chirp.Body = cleanChirp(chirp.Body)
-
-	//write chirp to DB and respond with ok
-	result, err := cfg.dbClient.CreateChirp(chirp.Body)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, result)
-}
-
-func cleanChirp(body string) string {
-	words := strings.Split(body, " ")
-	for i, v := range words {
-		if strings.ToLower(v) == "kerfuffle" || strings.ToLower(v) == "sharbert" || strings.ToLower(v) == "fornax" {
-			words[i] = "****"
-		}
-	}
-	return strings.Join(words, " ")
+func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "OK")
 }
