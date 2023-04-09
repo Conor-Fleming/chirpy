@@ -27,3 +27,5 @@ func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusCreated, result)
 }
+
+//implement function to normalize emails potentially error if not correct format
