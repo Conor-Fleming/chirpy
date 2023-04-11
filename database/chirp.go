@@ -15,14 +15,14 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	//Create chirp obj with body and unique ID
 	//update map with new chirp
-	idCounter += 1
-	if _, ok := chirpData.Chirps[idCounter]; !ok {
+	chirpid := len(chirpData.Chirps)
+	if _, ok := chirpData.Chirps[chirpid]; !ok {
 		chirp := Chirp{
 			ID:   idCounter,
 			Body: body,
 		}
 		//write updated map to db and return new Chirp
-		chirpData.Chirps[idCounter] = chirp
+		chirpData.Chirps[chirpid] = chirp
 		db.wrtiteDB(chirpData)
 		return chirp, nil
 	}

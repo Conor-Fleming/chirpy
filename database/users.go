@@ -9,6 +9,7 @@ func (db *DB) CreateUser(email string) (User, error) {
 	//how to deal with ID assignment
 
 	userData, _ := db.readDB()
+	userid := len(userData.Users)
 	if _, ok := userData.Users[userid]; !ok {
 		user := User{
 			ID:    userid,
