@@ -54,6 +54,7 @@ func (db *DB) ensureDB() error {
 func (db *DB) createDB() error {
 	data, err := json.Marshal(DBSchema{
 		Chirps: make(map[int]Chirp),
+		Users:  make(map[int]User),
 	})
 	if err != nil {
 		return err

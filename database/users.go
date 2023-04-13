@@ -6,10 +6,12 @@ func (db *DB) CreateUser(email string) (User, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
 
-	//how to deal with ID assignment
+	userData, err := db.readDB()
+	if err != nil {
+		return User{}, err
+	}
 
-	userData, _ := db.readDB()
-	userid := len(userData.Users)
+	userid := len(userData.Users) + 1
 	if _, ok := userData.Users[userid]; !ok {
 		user := User{
 			ID:    userid,

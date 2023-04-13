@@ -23,6 +23,8 @@ func main() {
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
 
+	apiRouter.Post("/users", apiCfg.postUserHandler)
+
 	apiRouter.Post("/chirps", apiCfg.postChirpHandler)
 	apiRouter.Get("/chirps", apiCfg.getChirpsHandler)
 	apiRouter.Get("/chirps/{chirpID}", apiCfg.GetchirpByID)

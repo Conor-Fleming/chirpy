@@ -15,10 +15,10 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	//Create chirp obj with body and unique ID
 	//update map with new chirp
-	chirpid := len(chirpData.Chirps)
+	chirpid := len(chirpData.Chirps) + 1
 	if _, ok := chirpData.Chirps[chirpid]; !ok {
 		chirp := Chirp{
-			ID:   idCounter,
+			ID:   chirpid,
 			Body: body,
 		}
 		//write updated map to db and return new Chirp
