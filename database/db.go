@@ -13,8 +13,8 @@ type DB struct {
 }
 
 type DBSchema struct {
-	Chirps map[int]Chirp `json:"Chirps"`
-	Users  map[int]User  `json:"Users"`
+	Chirps map[int]Chirp   `json:"Chirps"`
+	Users  map[string]User `json:"Users"`
 }
 
 type Chirp struct {
@@ -55,7 +55,7 @@ func (db *DB) ensureDB() error {
 func (db *DB) createDB() error {
 	data, err := json.Marshal(DBSchema{
 		Chirps: make(map[int]Chirp),
-		Users:  make(map[int]User),
+		Users:  make(map[string]User),
 	})
 	if err != nil {
 		return err

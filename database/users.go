@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,22 +24,27 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 	}
 
 	userid := len(userData.Users) + 1
-	if _, ok := userData.Users[userid]; !ok {
+	if _, ok := userData.Users[email]; !ok {
 		user := User{
 			ID:           userid,
 			Email:        email,
 			PasswordHash: hashedPass,
 		}
+		authenticated := User{
+			ID:    userid,
+			Email: email,
+		}
 
-		userData.Users[user.ID] = user
+		userData.Users[email] = user
 		db.wrtiteDB(userData)
-		return user, nil
+		return authenticated, nil
 	}
 
-	return User{}, errors.New("could not create user")
+	return User{}, errors.New("User already exists with that email")
 }
 
 func (db *DB) UserLogin(email, password string) (User, error) {
+	email = strings.ToLower(email)
 	db.mux.Lock()
 	defer db.mux.Unlock()
 
@@ -47,7 +53,20 @@ func (db *DB) UserLogin(email, password string) (User, error) {
 		return User{}, err
 	}
 
-	//err = bcrypt.CompareHashAndPassword([]byte(userData.Users), )
+	if _, ok := userData.Users[email]; !ok {
+		return User{}, errors.New("user does not exist")
+	}
 
-	return User{}, errors.New("could not authenticate")
+	//get stored hash and compare to given
+	user := userData.Users[email]
+	hash := userData.Users[email].PasswordHash
+	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		return User{}, errors.New("incorrect password")
+	}
+	authenticated := User{
+		ID:    user.ID,
+		Email: user.Email,
+	}
+	return authenticated, errors.New("could not authenticate")
 }
