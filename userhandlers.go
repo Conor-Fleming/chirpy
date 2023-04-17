@@ -49,9 +49,5 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, result.Email)
+	respondWithJSON(w, http.StatusOK, result)
 }
-
-//implement function to normalize emails potentially error if not correct format
-
-//hashing password

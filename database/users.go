@@ -9,11 +9,11 @@ import (
 )
 
 func (db *DB) CreateUser(email, password string) (User, error) {
+	email = strings.ToLower(email)
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("Create User hash: %v", err)
 	}
-	hashedPass := string(hashed)
 
 	db.mux.Lock()
 	defer db.mux.Unlock()
@@ -28,7 +28,7 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 		user := User{
 			ID:           userid,
 			Email:        email,
-			PasswordHash: hashedPass,
+			PasswordHash: string(hashed),
 		}
 		authenticated := User{
 			ID:    userid,
