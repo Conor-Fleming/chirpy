@@ -68,5 +68,5 @@ func (db *DB) UserLogin(email, password string) (User, error) {
 		ID:    user.ID,
 		Email: user.Email,
 	}
-	return authenticated, errors.New("could not authenticate")
+	return authenticated, nil
 }

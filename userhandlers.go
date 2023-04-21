@@ -45,7 +45,7 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := cfg.dbClient.UserLogin(user.Email, user.Password)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, errors.New("error loging in"))
+		respondWithError(w, http.StatusUnauthorized, errors.New("error loging in"))
 		return
 	}
 
