@@ -13,6 +13,7 @@ import (
 type apiConfig struct {
 	fileServes int
 	dbClient   database.DB
+	jwtSecret  string
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

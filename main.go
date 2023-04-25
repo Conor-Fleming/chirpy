@@ -3,18 +3,22 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Conor-Fleming/chirpy/database"
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	dbClient, err := database.NewDB("database.json")
 	if err != nil {
 		log.Fatal()
 	}
 	apiCfg := apiConfig{
-		dbClient: *dbClient,
+		dbClient:  *dbClient,
+		jwtSecret: os.Getenv("JWT_SECRET"),
 	}
 	router := chi.NewRouter()
 	apiRouter := chi.NewRouter()

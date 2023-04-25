@@ -31,8 +31,9 @@ func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
 
 func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
+		Password   string `json:"password"`
+		Email      string `json:"email"`
+		Token_time int    `json:"expires_in_seconds"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
