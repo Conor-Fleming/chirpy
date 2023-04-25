@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +47,8 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cfg.createJWT(user.Token_time)
+
 	result, err := cfg.dbClient.UserLogin(user.Email, user.Password)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, errors.New("error loging in"))
@@ -51,4 +56,21 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, result)
+}
+
+func (cfg apiConfig) createJWT(tokenTime int) {
+	if tokenTime > 24 || tokenTime == 0 {
+		tokenTime = 24
+	}
+
+	now := time.Now().UTC()
+	expiration := time.Now().Add(time.Duration(tokenTime))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    "chirpy",
+		IssuedAt:  now,
+		ExpiresAt: expiration,
+		Subject:   string(user.ID),
+	})
+
+	token.SignedString(cfg.jwtSecret)
 }
