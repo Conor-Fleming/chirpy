@@ -27,6 +27,7 @@ func main() {
 	apiRouter.Get("/healthz", healthzHandler)
 	adminRouter.Get("/metrics", apiCfg.hitzHandler)
 
+	apiRouter.Put("/users", apiCfg.updateUserHandler)
 	apiRouter.Post("/users", apiCfg.postUserHandler)
 	apiRouter.Post("/login", apiCfg.userLoginHandler)
 

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Conor-Fleming/chirpy/database"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -50,7 +49,7 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.createJWT(user, result)
+	token := cfg.createJWT(user)
 
 	respondWithJSON(w, http.StatusOK, result)
 }
@@ -58,9 +57,10 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 func (cfg apiConfig) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer")
+
 }
 
-func (cfg apiConfig) createJWT(user parameters, result database.User) {
+func (cfg apiConfig) createJWT(user parameters) *jwt.Token {
 	if user.Token_time > 24 || user.Token_time == 0 {
 		user.Token_time = 24
 	}
@@ -71,8 +71,7 @@ func (cfg apiConfig) createJWT(user parameters, result database.User) {
 		Issuer:    "chirpy",
 		IssuedAt:  now,
 		ExpiresAt: expiration,
-		Subject:   string(result.ID),
 	})
 
-	token.SignedString(cfg.jwtSecret)
+	return token
 }

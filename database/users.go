@@ -70,3 +70,8 @@ func (db *DB) UserLogin(email, password string) (User, error) {
 	}
 	return authenticated, nil
 }
+
+func (db *DB) UpdateUser(email, password string) (User, error) {
+
+	return User{}, nil
+}
