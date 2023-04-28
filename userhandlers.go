@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/Conor-Fleming/chirpy/database"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
-	}
+type parameters struct {
+	Password   string `json:"password"`
+	Email      string `json:"email"`
+	Token_time int    `json:"expires_in_seconds"`
+}
 
+func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	user := parameters{}
 	err := decoder.Decode(&user)
@@ -23,7 +26,7 @@ func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := cfg.dbClient.CreateUser(user.Email, user.Password)
+	result, err := cfg.dbClient.CreateUser(user.Email, user.Password, user.Token_time)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, errors.New("error creating user"))
 		return
@@ -33,12 +36,6 @@ func (cfg apiConfig) postUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Password   string `json:"password"`
-		Email      string `json:"email"`
-		Token_time int    `json:"expires_in_seconds"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
 	user := parameters{}
 	err := decoder.Decode(&user)
@@ -47,29 +44,34 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.createJWT(user.Token_time)
-
 	result, err := cfg.dbClient.UserLogin(user.Email, user.Password)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, errors.New("error loging in"))
 		return
 	}
 
+	cfg.createJWT(user, result)
+
 	respondWithJSON(w, http.StatusOK, result)
 }
 
-func (cfg apiConfig) createJWT(tokenTime int) {
-	if tokenTime > 24 || tokenTime == 0 {
-		tokenTime = 24
+func (cfg apiConfig) updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer")
+}
+
+func (cfg apiConfig) createJWT(user parameters, result database.User) {
+	if user.Token_time > 24 || user.Token_time == 0 {
+		user.Token_time = 24
 	}
 
 	now := time.Now().UTC()
-	expiration := time.Now().Add(time.Duration(tokenTime))
+	expiration := time.Now().Add(time.Duration(user.Token_time))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "chirpy",
 		IssuedAt:  now,
 		ExpiresAt: expiration,
-		Subject:   string(user.ID),
+		Subject:   string(result.ID),
 	})
 
 	token.SignedString(cfg.jwtSecret)
