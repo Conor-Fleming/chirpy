@@ -51,12 +51,16 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	token := cfg.createJWT(user)
 
+	result.Token = token
+
 	respondWithJSON(w, http.StatusOK, result)
 }
 
 func (cfg apiConfig) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer")
+
+	jwt.ParseWithClaims(token)
 
 }
 
@@ -65,11 +69,10 @@ func (cfg apiConfig) createJWT(user parameters) *jwt.Token {
 		user.Token_time = 24
 	}
 
-	now := time.Now().UTC()
-	expiration := time.Now().Add(time.Duration(user.Token_time))
+	expiration := jwt.NewNumericDate(time.Now().Add(time.Duration(user.Token_time)))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "chirpy",
-		IssuedAt:  now,
+		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		ExpiresAt: expiration,
 	})
 
