@@ -60,10 +60,26 @@ func (cfg apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg apiConfig) updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	user := parameters{}
+	err := decoder.Decode(&user)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, errors.New("error decoding email to user object"))
+		return
+	}
+
 	id, err := cfg.authorizeJWT(w, r)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, errors.New("could not authorize Token"))
 	}
+
+	updated, err := cfg.dbClient.UpdateUser(user.Email, user.Password, id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, errors.New("could not update user"))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, updated)
 }
 
 func (cfg apiConfig) authorizeJWT(w http.ResponseWriter, r *http.Request) (string, error) {
@@ -74,13 +90,13 @@ func (cfg apiConfig) authorizeJWT(w http.ResponseWriter, r *http.Request) (strin
 	})
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, errors.New("could not parse jwt"))
-		return err
+		return "", err
 	}
 
 	expiration, err := token.Claims.GetExpirationTime()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, errors.New("could not get expiration time"))
-		return err
+		return "", err
 	}
 
 	if !token.Valid || expiration.Before(time.Now().UTC()) {
@@ -88,7 +104,7 @@ func (cfg apiConfig) authorizeJWT(w http.ResponseWriter, r *http.Request) (strin
 	}
 	userID, err := token.Claims.GetSubject()
 
-	return userID
+	return userID, nil
 }
 
 func (cfg apiConfig) createJWT(user parameters) (string, error) {

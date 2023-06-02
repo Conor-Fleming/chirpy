@@ -71,7 +71,15 @@ func (db *DB) UserLogin(email, password string) (User, error) {
 	return authenticated, nil
 }
 
-func (db *DB) UpdateUser(email, password string) (User, error) {
+func (db *DB) UpdateUser(email, password, id string) (User, error) {
+	email = strings.ToLower(email)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return User{}, fmt.Errorf("Create User hash: %v", err)
+	}
+
+	db.mux.Lock()
+	defer db.mux.Unlock()
 
 	return User{}, nil
 }
